@@ -26,7 +26,11 @@ class Player {
         kKey.onDown.add(this.kick, this);
     }
 
-    update() {
+    getSprite(){
+        return this.boxer;
+    }
+
+    update(collissionRight) {
         if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
             if(this.boxer.x > 260) { // ring ropes left
                 this.boxer.x -= 4;
@@ -36,11 +40,13 @@ class Player {
                 }
             }
         } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-            if(this.boxer.x < 850) { // ring ropes right
-                this.boxer.x += 4;
-                if(Math.abs(new Date() - this.lastLocationUpdate) > 16) { // 30 times a second position update
-                    socket.emit('l', this.boxer.x);
-                    this.lastLocationUpdate = new Date();
+            if(!collissionRight) {
+                if (this.boxer.x < 850) { // ring ropes right
+                    this.boxer.x += 4;
+                    if (Math.abs(new Date() - this.lastLocationUpdate) > 16) { // 30 times a second position update
+                        socket.emit('l', this.boxer.x);
+                        this.lastLocationUpdate = new Date();
+                    }
                 }
             }
         }
@@ -65,10 +71,14 @@ class Player {
     }
 
     takeDamage(){
-        this.game.camera.flash(0xff0000, 500);
+        this.game.camera.flash(0xff0000, 200);
     }
 
     animationStopped() {
         this.boxer.animations.play("idle");
+    }
+
+    checkCollide(enemy) {
+        return (this.boxer.x + 110 > enemy.getSprite().x + 140 );
     }
 }

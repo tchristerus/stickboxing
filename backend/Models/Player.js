@@ -74,18 +74,27 @@ class Player {
     punch(enemy, punchHittedCallback){
         let player = this;
         this.setCanPunch(false);
-        AnimationTimer.animateUntilFrame(this.kickAnimation,5, function () {
-            player.setCanPunch(true);
+        this.headBlocked = false;
 
+        AnimationTimer.animateWhole(this.kickAnimation, function(){
+            player.setCanPunch(true);
+            player.headBlocked = true;
+        });
+        AnimationTimer.animateUntilFrame(this.kickAnimation,5, function () {
             let posLeft = (player.playerSide === 'left') ? player.getPosX() : enemy.getPosX();
             let posRight = (enemy.playerSide === 'left') ? player.getPosX() : enemy.getPosX();
 
             console.log('pos1 ' + player.playerSide + ':' + posLeft + '  pos2 ' + enemy.playerSide + ':' + posRight);
-            if(Math.abs(posRight - posLeft) < 150){
+            if (Math.abs(posRight - posLeft) < 150) {
                 console.log('in range for punch: ' + Math.abs(posRight - posLeft));
-                punchHittedCallback();
-            }else{
+                if(enemy.headBlocked) {
+                    punchHittedCallback(true);
+                }else{
+                    punchHittedCallback(false);
+                }
+            } else {
                 console.log('To far away to punch the enemy: ' + Math.abs(posRight - posLeft) + 'px');
+                punchHittedCallback(null)
             }
         });
     }

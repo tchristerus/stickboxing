@@ -7,6 +7,7 @@ class Enemy {
 
     create() {
         this.enemy = this.game.add.sprite(520, 250, 'enemy', 5);
+
         this.enemy.anchor.setTo(0.15, 0);
         this.enemy.scale.set(1);
         this.enemy.scale.x *=-1;
@@ -21,6 +22,10 @@ class Enemy {
 
     setPosition(locX){
         this.enemy.x = locX;
+    }
+
+    getSprite(){
+        return this.enemy;
     }
 
     punch() {

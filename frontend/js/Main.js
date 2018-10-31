@@ -22,6 +22,5 @@ class Game {
     }
 }
 
-let socket = io('localhost:3000');
-
+let socket = io(window.location.hostname + ":3000");
 let game = new Game();

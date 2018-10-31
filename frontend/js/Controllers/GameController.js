@@ -7,9 +7,10 @@ class GameController {
     }
 
     enemyEvents(){
+        let game = this.game;
         let player = this.player;
         let enemy = this.enemy;
-
+        let blockSound = this.game.blockSound;
         socket.on('enemy_punch', function () {
             console.log('enemy_punch received');
             enemy.punch();
@@ -28,12 +29,21 @@ class GameController {
             console.info('punch animation done');
         });
 
+
+
+        socket.on('blocked_head', function (data) {
+            console.info('blocked head');
+            game.blockSound.play();
+        });
+
         socket.on('hit_head', function (data) {
             console.info('enemy hit');
+            game.hitSound.play();
         });
 
         socket.on('hitted_head', function (data) {
-            console.info('enemy hit');
+            console.info('Got hit');
+            game.hitSound.play();
             player.takeDamage()
         });
     }

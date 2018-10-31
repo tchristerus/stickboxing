@@ -60,13 +60,20 @@ class Match {
         let io = this.io;
         let roomID = this.roomID;
 
+
+
         // punch events
         this.player1.getSocket().on('punch', function () {
             if(player1.getCanPunch()) {
                 player1.getSocket().broadcast.emit('enemy_punch');
-                player1.punch(player2, function () {
-                    player1.getSocket().emit('hit_head');
-                    io.sockets.to(roomID).emit('hitted_head');
+                player1.punch(player2, function (headBlocked) {
+                    if(headBlocked === true) {
+                        player1.getSocket().emit('blocked_head');
+                        io.sockets.to(roomID).emit('blocked_head');
+                    }else if(headBlocked === false){
+                        player1.getSocket().emit('hit_head');
+                        io.sockets.to(roomID).emit('hitted_head');
+                    }
                 });
                 console.log('broadcasting enemy_punch');
             }else{
@@ -77,9 +84,14 @@ class Match {
         this.player2.getSocket().on('punch', function () {
             if(player2.getCanPunch()) {
                 player2.getSocket().broadcast.emit('enemy_punch');
-                player2.punch(player1, function () {
-                    player2.getSocket().emit('hit_head');
-                    io.sockets.to(roomID).emit('hitted_head');
+                player2.punch(player1, function (headBlocked) {
+                    if(headBlocked === true) {
+                        player2.getSocket().emit('blocked_head');
+                        io.sockets.to(roomID).emit('blocked_head');
+                    }else if(headBlocked === false){
+                        player2.getSocket().emit('hit_head');
+                        io.sockets.to(roomID).emit('hitted_head');
+                    }
                 });
                 console.log('broadcasting enemy_punch');
             }
