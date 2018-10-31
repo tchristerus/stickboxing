@@ -8,6 +8,8 @@ class Game {
         this.game.stage.backgroundColor = "#FFFFFF";
         this.game.state.add('Main', MainMenu.Main);
         this.game.state.add('Game', MainGame.Main);
+        this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     }
 
     create(){
@@ -20,5 +22,6 @@ class Game {
     }
 }
 
-socket = io('192.168.1.27:3000');
+let socket = io('localhost:3000');
+
 let game = new Game();
