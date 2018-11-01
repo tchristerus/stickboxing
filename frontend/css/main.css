@@ -1,3 +1,9 @@
 body{background-color: #959595; }
 * {padding: 0; margin: 0}
 canvas { margin: 0 auto; }
+
+#controls > table{
+    margin: 0 auto;
+    color: #ffffff;
+    font-size: 20px;
+}
