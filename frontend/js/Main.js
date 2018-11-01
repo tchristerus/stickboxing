@@ -36,3 +36,7 @@ class Game {
 
 const socket = io(window.location.hostname + ':3000');
 const game = new Game();
+
+socket.on('connect_error', function(error){
+    alert('The server is down. Try again later');
+});
