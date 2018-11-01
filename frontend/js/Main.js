@@ -15,8 +15,6 @@ class Game {
         this.game.stage.backgroundColor = '#FFFFFF';
         this.game.state.add('Main', MainMenu.Main);
         this.game.state.add('Game', MainGame.Main);
-        this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-        this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     }
 
     /**
