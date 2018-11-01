@@ -1,6 +1,13 @@
+/** Manages all the networking and match logic */
 class GameController {
 
-    constructor(game, player, enemy){
+    /**
+     * Constructor
+     * @param {Phaer} game
+     * @param {Player} player
+     * @param {Enemy} enemy
+     */
+    constructor(game, player, enemy) {
         this.game = game;
         this.player = player;
         this.enemy = enemy;
@@ -8,67 +15,69 @@ class GameController {
         this.timeLeft = 30;
     }
 
-    enemyEvents(){
-        let game = this.game;
-        let player = this.player;
-        let enemy = this.enemy;
-        let blockSound = this.game.blockSound;
-        let rumble = this.game.rumble;
-        let bell = this.game.bell;
-        let scope = this;
+    /**
+     * Creates all the socket events
+     */
+    events() {
+        const game = this.game;
+        const player = this.player;
+        const enemy = this.enemy;
+        const rumble = this.game.rumble;
+        const bell = this.game.bell;
+        const scope = this;
 
-        socket.on('play_rumble', function(){
+        socket.on('play_rumble', function() {
             rumble.play();
         });
 
-        socket.on('start_game', function(){
+        socket.on('start_game', function() {
             bell.play();
             player.canMove = true;
         });
 
-        socket.on('round_end', function(){
+        socket.on('round_end', function() {
             bell.play();
             player.canMove = false;
         });
 
-        socket.on('round_start', function(){
+        socket.on('round_start', function() {
             bell.play();
             player.canMove = true;
         });
 
-        socket.on('game_over', function(data){
+        socket.on('game_over', function(data) {
             player.canMove = false;
         });
 
-        socket.on('enemy_punch', function () {
+        socket.on('enemy_punch', function() {
             console.log('enemy_punch received');
             enemy.punch();
         });
 
-        socket.on('enemy_kick', function () {
+        socket.on('enemy_kick', function() {
             console.log('enemy_kick received');
             enemy.kick();
         });
 
-        socket.on('el', function (data) {
+        socket.on('el', function(data) {
             enemy.setPosition(850 - (data + (enemy.enemy.width / 2)));
         });
 
-        socket.on('punch_done', function (data) {
+        socket.on('punch_done', function(data) {
             console.info('punch animation done');
         });
 
-        socket.on('blocked_head', function (data) {
+        socket.on('blocked_head', function(data) {
             console.info('blocked head');
             game.blockSound.play();
         });
 
-        socket.on('hit_head', function (data) {
+        socket.on('hit_head', function(data) {
             console.info('enemy hit');
             game.hitSound.play();
         });
 
-        socket.on('hitted_head', function (data) {
+        socket.on('hitted_head', function(data) {
             console.info('Got hit');
             game.hitSound.play();
             player.takeDamage();
@@ -76,50 +85,45 @@ class GameController {
             player.setHeadDamage(JSON.parse(data).head_damage);
         });
 
-        socket.on('hit_leg', function () {
+        socket.on('hit_leg', function() {
             console.info('Hitted enemies leg');
             game.hitSound.play();
             enemy.takeDamageLegs();
         });
 
-        socket.on('hitted_leg', function () {
+        socket.on('hitted_leg', function() {
             console.info('Your leg got hit');
             game.hitSound.play();
             player.takeDamage();
             player.takeDamageLegs();
         });
 
-        socket.on('game_update', function (data) {
-            if(player.canMove) {
-                let json = JSON.parse(data);
+        socket.on('game_update', function(data) {
+            if (player.canMove) {
+                const json = JSON.parse(data);
                 scope.round = json.round;
                 scope.timeLeft = json.tl;
                 scope.updateGameText();
             }
         });
 
-        socket.on('set_text', function (data) {
+        socket.on('set_text', function(data) {
             console.log('Update text to ' + data);
             scope.game.text.text = data;
         });
 
-        socket.on('set_loc', function (data) {
-            let json = JSON.parse(data);
+        socket.on('set_loc', function(data) {
+            const json = JSON.parse(data);
             player.getSprite().x = json.p; // data.p == player location
             enemy.getSprite().x = json.e; // data.e == enemy location
         });
     }
 
-    updateGameText(){
+    /**
+     * Updates the game text on the screen to EG (Round1: 20 Sec left)
+     */
+    updateGameText() {
         this.game.text.text = 'Round ' + this.round + ': ' + this.timeLeft + ' sec left';
     }
 
-    audioEvents(){
-        this.game.music.onStop.add(this.readyToRumbleDone, this);
-
-    }
-
-    readyToRumbleDone(){
-        console.log('audio_done');
-    }
 }

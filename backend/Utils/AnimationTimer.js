@@ -1,18 +1,37 @@
+/** Util to simulate animations */
 class AnimationTimer {
 
-    /***
-     * Will calculate the total animation time and give a callback when done
-     * @param animation
-     * @param callback
+    /**
+     * This callback will get called whenever the animation is finished
+     *
+     * @callback animationCallback
      */
-    static animateWhole(animation, callback){
+
+    /**
+     * Will calculate the total animation time and give a callback when done
+     * @param {Animation} animation
+     * @param {animationCallback} callback
+     */
+    static animateWhole(animation, callback) {
         setTimeout(callback, animation.getTotalTime());
     }
 
+    /**
+     * This callback will get called whenever the animation reaches a specific frame
+     *
+     * @callback animationSpecificFrameCallback
+     */
 
-    static animateUntilFrame(animation, frame, callback){
+    /**
+     * Will calculate the total animation time and give a callback when done
+     * @param {Animation} animation
+     * @param {number} frame
+     * @param {animationSpecificFrameCallback} callback
+     */
+    static animateUntilFrame(animation, frame, callback) {
         setTimeout(callback, animation.getSpecificFrameTime(frame));
     }
+
 }
 
 module.exports = AnimationTimer;

@@ -1,26 +1,40 @@
+/** Main logic */
 class Game {
 
-    constructor(){
-        this.game = new Phaser.Game(800, 600, Phaser.AUTO, 'Boxing-game', { preload: this.preload, create: this.create, update: this.update });
+    /**
+     * Constructor
+     */
+    constructor() {
+        this.game = new Phaser.Game(800, 600, Phaser.AUTO, 'Boxing-game', {preload: this.preload, create: this.create, update: this.update});
     }
 
-    preload(){
-        this.game.stage.backgroundColor = "#FFFFFF";
+    /**
+     * Loads everything before starting the game
+     */
+    preload() {
+        this.game.stage.backgroundColor = '#FFFFFF';
         this.game.state.add('Main', MainMenu.Main);
         this.game.state.add('Game', MainGame.Main);
         this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
     }
 
-    create(){
+    /**
+     * Creates everything before starting the main loop
+     */
+    create() {
         this.game.stage.disableVisibilityChange = true;
         this.game.state.start('Main');
     }
 
-    update(){
+    /**
+     * Gets called on every game update
+     */
+    update() {
 
     }
+
 }
 
-let socket = io(window.location.hostname + ":3000");
-let game = new Game();
+const socket = io(window.location.hostname + ':3000');
+const game = new Game();
