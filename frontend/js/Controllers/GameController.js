@@ -14,14 +14,30 @@ class GameController {
         let enemy = this.enemy;
         let blockSound = this.game.blockSound;
         let rumble = this.game.rumble;
+        let bell = this.game.bell;
         let scope = this;
 
         socket.on('play_rumble', function(){
             rumble.play();
         });
 
+        socket.on('start_game', function(){
+            bell.play();
+            player.canMove = true;
+        });
+
+        socket.on('round_end', function(){
+            bell.play();
+            player.canMove = false;
+        });
+
+        socket.on('round_start', function(){
+            bell.play();
+            player.canMove = true;
+        });
+
         socket.on('game_over', function(data){
-            console.log(data);
+            player.canMove = false;
         });
 
         socket.on('enemy_punch', function () {
@@ -74,11 +90,24 @@ class GameController {
         });
 
         socket.on('game_update', function (data) {
+            if(player.canMove) {
+                let json = JSON.parse(data);
+                scope.round = json.round;
+                scope.timeLeft = json.tl;
+                scope.updateGameText();
+            }
+        });
+
+        socket.on('set_text', function (data) {
+            console.log('Update text to ' + data);
+            scope.game.text.text = data;
+        });
+
+        socket.on('set_loc', function (data) {
             let json = JSON.parse(data);
-            scope.round = json.round;
-            scope.timeLeft = json.tl;
-            scope.updateGameText();
-        })
+            player.getSprite().x = json.p; // data.p == player location
+            enemy.getSprite().x = json.e; // data.e == enemy location
+        });
     }
 
     updateGameText(){

@@ -6,6 +6,7 @@ class Player {
         this.lastLocationUpdate = new Date();
         this.headDamage = 0;
         this.canPunch = true;
+        this.canMove = false;
     }
 
     create(){
@@ -35,22 +36,23 @@ class Player {
     }
 
     update(collisionRight) {
-
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-            if(this.boxer.x > 260) { // ring ropes left
-                this.boxer.x -= 4;
-                if(Math.abs(new Date() - this.lastLocationUpdate) > 16) { // 30 times a second position update
-                    socket.emit('l', this.boxer.x);
-                    this.lastLocationUpdate = new Date();
-                }
-            }
-        } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-            if(!collisionRight) {
-                if (this.boxer.x < 850) { // ring ropes right
-                    this.boxer.x += 4;
+        if(this.canMove) {
+            if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
+                if (this.boxer.x > 260) { // ring ropes left
+                    this.boxer.x -= 4;
                     if (Math.abs(new Date() - this.lastLocationUpdate) > 16) { // 30 times a second position update
                         socket.emit('l', this.boxer.x);
                         this.lastLocationUpdate = new Date();
+                    }
+                }
+            } else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
+                if (!collisionRight) {
+                    if (this.boxer.x < 850) { // ring ropes right
+                        this.boxer.x += 4;
+                        if (Math.abs(new Date() - this.lastLocationUpdate) > 16) { // 30 times a second position update
+                            socket.emit('l', this.boxer.x);
+                            this.lastLocationUpdate = new Date();
+                        }
                     }
                 }
             }
@@ -58,25 +60,29 @@ class Player {
     }
 
     punch() {
-        if(this.canPunch) {
-            socket.emit('punch');
-            this.boxer.animations.play("punch");
-            this.game.time.events.add(400, function () {
-                // this.camera.shake(0.01, 100);
-                // game.camera.flash(0xff0000, 250);
-            }, this);
-        }else{
-            console.log('Cannot punch, kick damage in progress');
+        if(this.canMove) {
+            if (this.canPunch) {
+                socket.emit('punch');
+                this.boxer.animations.play("punch");
+                this.game.time.events.add(400, function () {
+                    // this.camera.shake(0.01, 100);
+                    // game.camera.flash(0xff0000, 250);
+                }, this);
+            } else {
+                console.log('Cannot punch, kick damage in progress');
+            }
         }
     }
 
     kick() {
-        socket.emit('kick');
-        this.boxer.animations.play("kick");
-        this.game.time.events.add(400, function(){
-            // this.camera.shake(0.01, 100);
-            // game.camera.flash(0xff0000, 500);
-        }, this);
+        if(this.canMove) {
+            socket.emit('kick');
+            this.boxer.animations.play("kick");
+            this.game.time.events.add(400, function () {
+                // this.camera.shake(0.01, 100);
+                // game.camera.flash(0xff0000, 500);
+            }, this);
+        }
     }
 
     takeDamage(){

@@ -12,17 +12,19 @@ MainGame.Main.prototype = {
         this.load.audio('ready_to_rumble', ['assets/music/boxing.ogg']);
         this.load.audio('boxing_hit', ['assets/music/boxing_hit.ogg']);
         this.load.audio('boxing_block', ['assets/music/boxing_blocked.ogg']);
+        this.load.audio('bell', ['assets/music/bell.ogg']);
     },
 
     create: function(){
         this.rumble = this.game.add.audio('ready_to_rumble');
         this.hitSound = this.game.add.audio('boxing_hit');
         this.blockSound = this.game.add.audio('boxing_block');
+        this.bell = this.game.add.audio('bell');
         this.add.tileSprite(0, 0, 800, 600, 'background');
         this.player.create();
         this.enemy.create();
         this.gameController.enemyEvents();
-        this.game.sound.setDecodedCallback([ this.rumble, this.hitSound, this.blockSound ], this.start, this);
+        this.game.sound.setDecodedCallback([ this.rumble, this.hitSound, this.blockSound, this.bell ], this.start, this);
 
         let style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
         //  The Text is positioned at 0, 100

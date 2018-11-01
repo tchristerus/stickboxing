@@ -3,13 +3,17 @@ class Match {
     constructor(player1, player2, io){
         this.player1 = player1;
         this.player2 = player2;
+        this.startLocations = {p1: 350, p2: 630};
         this.player1.setPosX(350);
         this.player2.setPosX(630);
         this.io = io;
         this.player1.setPlayerSide('left');
         this.player2.setPlayerSide('right');
+        this.roundTime = 30;
         this.round = 1;
         this.timeLeft = null;
+        this.gameStarted = false;
+        this.roundPause = false; // Used to count 5 seconds between rounds
         this.roomID = Math.random().toString(36).substring(7);
         console.log("Match created");
 
@@ -40,51 +44,91 @@ class Match {
     startGame(){
         console.log('Sending startGame event');
         this.io.to(this.roomID).emit('startGame');
-
         this.round = 1;
-        this.timeLeft = 10;
+        this.timeLeft = this.roundTime;
         this.handleGameStats();
     }
 
     handleWinner(){
+        this.player1.getSocket().emit('round_end');
         if(this.player1.headDamage < this.player2.headDamage){ // player 1 win
             console.log('Player 1 wins');
             this.player1.getSocket().emit('game_over', 'win');
             this.player2.getSocket().emit('game_over', 'lose');
+
+            this.player1.getSocket().emit('set_text', 'You win!');
+            this.player2.getSocket().emit('set_text', 'You lose!');
+
         }else if(this.player1.headDamage > this.player2.headDamage){ // player 2 win
             console.log('Player 2 wins');
             this.player1.getSocket().emit('game_over', 'lose');
             this.player2.getSocket().emit('game_over', 'win');
+
+            this.player1.getSocket().emit('set_text', 'You lose!');
+            this.player2.getSocket().emit('set_text', 'You win!');
         }else { // draw
             console.log('draw');
             this.io.to(this.roomID).emit('game_over', 'draw');
+            this.io.to(this.roomID).emit('set_text', 'draw');
         }
     }
 
     playersRumbleDone(){
-        return (this.player1.rumbleDone && this.player2.rumbleDone);
+        if(this.player1.rumbleDone && this.player2.rumbleDone){
+            if(this.gameStarted)
+                return true;
+            this.io.to(this.roomID).emit('start_game');
+            this.gameStarted = true;
+            return true;
+        }
+        return false;
+    }
+
+    newRound(){
+        this.resetLocations();
+        this.io.to(this.roomID).emit('round_end');
+        this.roundPause = true;
+        this.io.to(this.roomID).emit('set_text', 'Starting new round');
+        let scope = this;
+
+        setTimeout(function(){
+            scope.io.to(scope.roomID).emit('round_start');
+            scope.roundPause = false;
+        }, 5000)
     }
 
     handleGameStats(){
         let scope = this;
         this.statusTimer = setInterval(function () {
-            if(scope.playersRumbleDone()) {
-                if (scope.timeLeft > 0) {
-                    scope.timeLeft--;
-                } else {
-                    // time is up
-                    if (scope.round < 3) {
-                        scope.round++;
-                        scope.timeLeft = 10;
+            if(!scope.roundPause) {
+                if (scope.playersRumbleDone()) {
+                    if (scope.timeLeft > 0) {
+                        scope.timeLeft--;
                     } else {
-                        // round over
-                        scope.handleWinner();
-                        clearInterval(scope.statusTimer);
+                        // time is up
+                        if (scope.round < 3) {
+                            scope.round++;
+                            scope.timeLeft = scope.roundTime;
+                            scope.newRound();
+                        } else {
+                            // round over
+                            scope.handleWinner();
+                            clearInterval(scope.statusTimer);
+                        }
                     }
+                    scope.io.to(scope.roomID).emit('game_update', JSON.stringify({
+                        round: scope.round,
+                        tl: scope.timeLeft
+                    }));
                 }
-                scope.io.to(scope.roomID).emit('game_update', JSON.stringify({round: scope.round, tl: scope.timeLeft}));
             }
         },1000);
+    }
+
+    resetLocations(){
+        this.player1.setPosX(this.startLocations.p1);
+        this.player2.setPosX(this.startLocations.p1);
+        this.io.to(this.roomID).emit('set_loc', JSON.stringify({p: this.startLocations.p1, e: this.startLocations.p2}));
     }
 
     getPlayer1(){
@@ -140,6 +184,9 @@ class Match {
         }
     }
 
+    playerReady(player){
+        player.getSocket().emit('set_text', 'Get ready to rumble!');
+    }
 
     networkEvents(){
         let player1 = this.player1;
@@ -151,11 +198,13 @@ class Match {
         this.player1.getSocket().on('ready', function(){
             player1.ready = true;
             scope.startRumble();
+            scope.playerReady(player1);
         });
 
         this.player2.getSocket().on('ready', function(){
             player2.ready = true;
             scope.startRumble();
+            scope.playerReady(player2);
         });
 
         // rumble sound done
@@ -187,13 +236,17 @@ class Match {
 
         // move events
         this.player1.getSocket().on('l', function (data) {
-            player1.setPosX(data);
-            player2.getSocket().volatile.emit('el', data);
+            if(!scope.roundPause) {
+                player1.setPosX(data);
+                player2.getSocket().volatile.emit('el', data);
+            }
         });
 
         this.player2.getSocket().on('l', function (data) {
-            player2.setPosX(data);
-            player1.getSocket().volatile.emit('el', data);
+            if(!scope.roundPause) {
+                player2.setPosX(data);
+                player1.getSocket().volatile.emit('el', data);
+            }
         });
     }
 }

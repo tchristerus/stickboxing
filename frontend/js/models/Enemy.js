@@ -6,7 +6,7 @@ class Enemy {
     }
 
     create() {
-        this.enemy = this.game.add.sprite(520, 250, 'enemy', 5);
+        this.enemy = this.game.add.sprite(630, 250, 'enemy', 5);
 
         this.enemy.anchor.setTo(0.15, 0);
         this.enemy.scale.set(1);
