@@ -1,8 +1,8 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var MatchManager = require('./Managers/MatchManager');
-var PlayerManager = require('./Managers/PlayerManager');
+let app = require('express')();
+let http = require('http').Server(app);
+let io = require('socket.io')(http);
+let MatchManager = require('./Managers/MatchManager');
+let PlayerManager = require('./Managers/PlayerManager');
 
 
 class Game {
