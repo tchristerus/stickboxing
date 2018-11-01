@@ -54,58 +54,65 @@ class Match {
         // gets called right before the match gets removed
     }
 
-    networkEvents(){
-        let player1 = this.player1;
-        let player2 = this.player2;
+    handlePunch(player1, player2){
         let io = this.io;
         let roomID = this.roomID;
 
+        if(player1.getCanPunch()) {
+            player1.getSocket().broadcast.emit('enemy_punch');
+            player1.punch(player2, function (headBlocked) {
+                if(headBlocked === true) {
+                    player1.getSocket().emit('blocked_head');
+                    player2.getSocket().emit('blocked_head');
+                    // player2.getSocket().emit('hitted_head', JSON.stringify({head_damage: player2.headDamage}));
+                }else if(headBlocked === false){
+                    player1.getSocket().emit('hit_head');
+                    player2.headDamage += 10;
+                    player2.getSocket().emit('hitted_head', JSON.stringify({head_damage: player2.headDamage}));
+                }
+            });
+            console.log('broadcasting enemy_punch');
+        }else{
+            console.log('Cannot punch ' + player1.getCanPunch());
+        }
+    }
+
+    handleKick(player1, player2){
+        let io = this.io;
+        let roomID = this.roomID;
+        player1.getSocket().broadcast.emit('enemy_kick');
+
+        player1.kick(player2, function(){
+            player1.getSocket().emit('hit_leg');
+            player2.getSocket().emit('hitted_leg');
+            player2.takeLegKick();
+        })
+    }
+
+
+    networkEvents(){
+        let player1 = this.player1;
+        let player2 = this.player2;
+        let scope = this;
 
 
         // punch events
         this.player1.getSocket().on('punch', function () {
-            if(player1.getCanPunch()) {
-                player1.getSocket().broadcast.emit('enemy_punch');
-                player1.punch(player2, function (headBlocked) {
-                    if(headBlocked === true) {
-                        player1.getSocket().emit('blocked_head');
-                        io.sockets.to(roomID).emit('blocked_head');
-                    }else if(headBlocked === false){
-                        player1.getSocket().emit('hit_head');
-                        io.sockets.to(roomID).emit('hitted_head');
-                    }
-                });
-                console.log('broadcasting enemy_punch');
-            }else{
-                console.log('Cannot punch ' + player1.getCanPunch());
-            }
+            scope.handlePunch(player1, player2)
         });
 
         this.player2.getSocket().on('punch', function () {
-            if(player2.getCanPunch()) {
-                player2.getSocket().broadcast.emit('enemy_punch');
-                player2.punch(player1, function (headBlocked) {
-                    if(headBlocked === true) {
-                        player2.getSocket().emit('blocked_head');
-                        io.sockets.to(roomID).emit('blocked_head');
-                    }else if(headBlocked === false){
-                        player2.getSocket().emit('hit_head');
-                        io.sockets.to(roomID).emit('hitted_head');
-                    }
-                });
-                console.log('broadcasting enemy_punch');
-            }
+            scope.handlePunch(player2, player1);
         });
 
 
         // kick events
         this.player1.getSocket().on('kick', function () {
-            player1.getSocket().broadcast.emit('enemy_kick');
-            console.log('broadcasting enemy_kick');
+            scope.handleKick(player1, player2);
         });
 
         this.player2.getSocket().on('kick', function () {
-            player2.getSocket().broadcast.emit('enemy_kick');
+            scope.handleKick(player2, player1);
         });
 
         // move events

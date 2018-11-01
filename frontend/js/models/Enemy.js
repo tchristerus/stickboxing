@@ -14,10 +14,11 @@ class Enemy {
         this.enemy.animations.add('idle', [0,1,2], 9, true);
         this.enemy.animations.add('punch', [3,4,5,6,7,8,9,10,11], 15, false);
         this.enemy.animations.add('kick', [12, 13,14,15,16,17,18,19], 15, false);
+        this.enemy.animations.add('take_damage_legs', [20, 19,18,19,20], 5, false);
         this.enemy.animations.getAnimation("punch").onComplete.add(this.animationStopped, this);
         this.enemy.animations.getAnimation("kick").onComplete.add(this.animationStopped, this);
+        this.enemy.animations.getAnimation("take_damage_legs").onComplete.add(this.animationStopped, this);
         this.enemy.animations.play("idle");
-
     }
 
     setPosition(locX){
@@ -43,6 +44,10 @@ class Enemy {
             // this.camera.shake(0.01, 100);
             // game.camera.flash(0xff0000, 500);
         }, this);
+    }
+
+    takeDamageLegs(){
+        this.enemy.animations.play("take_damage_legs");
     }
 
     animationStopped() {

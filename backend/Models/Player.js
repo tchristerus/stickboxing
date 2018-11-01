@@ -1,5 +1,6 @@
 let Animation = require('../Models/Animation');
 let AnimationTimer = require('../Utils/AnimationTimer');
+let RangeUtil = require('../Utils/RangeUtil');
 
 class Player {
 
@@ -7,7 +8,8 @@ class Player {
         this.socket = socket;
         this.playerSide = null; // left or right
         this.socket.searchingMatch = false;
-        this.kickAnimation = new Animation('kick', 9, 15);
+        this.punchAnimation = new Animation('punch', 9, 15);
+        this.kickAnimation = new Animation('kick', 8, 15);
         this.resetGameStats();
     }
 
@@ -76,26 +78,49 @@ class Player {
         this.setCanPunch(false);
         this.headBlocked = false;
 
-        AnimationTimer.animateWhole(this.kickAnimation, function(){
+        AnimationTimer.animateWhole(this.punchAnimation, function(){
             player.setCanPunch(true);
             player.headBlocked = true;
         });
-        AnimationTimer.animateUntilFrame(this.kickAnimation,5, function () {
-            let posLeft = (player.playerSide === 'left') ? player.getPosX() : enemy.getPosX();
-            let posRight = (enemy.playerSide === 'left') ? player.getPosX() : enemy.getPosX();
 
-            console.log('pos1 ' + player.playerSide + ':' + posLeft + '  pos2 ' + enemy.playerSide + ':' + posRight);
-            if (Math.abs(posRight - posLeft) < 150) {
-                console.log('in range for punch: ' + Math.abs(posRight - posLeft));
+        // Callback when frame 5 is reached (PUNCH HIT FRAME)
+        AnimationTimer.animateUntilFrame(this.punchAnimation,5, function () {
+            if (RangeUtil.inRange(player, enemy, 150)) {
                 if(enemy.headBlocked) {
                     punchHittedCallback(true);
                 }else{
                     punchHittedCallback(false);
                 }
             } else {
-                console.log('To far away to punch the enemy: ' + Math.abs(posRight - posLeft) + 'px');
                 punchHittedCallback(null)
             }
+        });
+    }
+
+    kick(enemy, hittedCallback){
+        let player = this;
+        this.setCanPunch(false);
+        this.headBlocked = false;
+
+        AnimationTimer.animateWhole(this.kickAnimation, function(){
+            player.headBlocked = true;
+        });
+
+        // Callback when frame 5 is reached (PUNCH HIT FRAME)
+        AnimationTimer.animateUntilFrame(this.kickAnimation,5, function () {
+            player.setCanPunch(true);
+
+            if (RangeUtil.inRange(player, enemy, 150)) {
+                hittedCallback();
+            }
+        });
+    }
+
+    takeLegKick(){
+        let player = this;
+        this.headBlocked = false;
+        AnimationTimer.animateWhole(this.kickAnimation, function(){
+            player.headBlocked = true;
         });
     }
 }

@@ -44,7 +44,22 @@ class GameController {
         socket.on('hitted_head', function (data) {
             console.info('Got hit');
             game.hitSound.play();
-            player.takeDamage()
+            player.takeDamage();
+            console.info(data);
+            player.setHeadDamage(JSON.parse(data).head_damage);
+        });
+
+        socket.on('hit_leg', function () {
+            console.info('Hitted enemies leg');
+            game.hitSound.play();
+            enemy.takeDamageLegs();
+        });
+
+        socket.on('hitted_leg', function () {
+            console.info('Your leg got hit');
+            game.hitSound.play();
+            player.takeDamage();
+            player.takeDamageLegs();
         });
     }
 
