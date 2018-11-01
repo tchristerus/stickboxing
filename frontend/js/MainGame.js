@@ -18,15 +18,30 @@ MainGame.Main.prototype = {
         this.rumble = this.game.add.audio('ready_to_rumble');
         this.hitSound = this.game.add.audio('boxing_hit');
         this.blockSound = this.game.add.audio('boxing_block');
-        this.rumble.play();
         this.add.tileSprite(0, 0, 800, 600, 'background');
-
         this.player.create();
         this.enemy.create();
         this.gameController.enemyEvents();
-        console.info("MainGame loaded");
+        this.game.sound.setDecodedCallback([ this.rumble, this.hitSound, this.blockSound ], this.start, this);
+
+        let style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+        //  The Text is positioned at 0, 100
+        this.text = this.add.text(0, 0, "Round 1: 30 sec left", style);
+        this.text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+
+        //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
+        this.text.setTextBounds(0, 100, 800, 100);
     },
 
+    start: function(){
+        console.info("Audio loaded loaded");
+        this.rumble.onStop.add(this.rumbleStopped, this);
+        socket.emit('ready');
+    },
+
+    rumbleStopped: function(){
+        socket.emit('rumble_done');
+    },
     update: function () {
         let collisionRight = this.player.checkCollide(this.enemy);
         this.player.update(collisionRight);

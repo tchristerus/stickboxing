@@ -4,6 +4,8 @@ class GameController {
         this.game = game;
         this.player = player;
         this.enemy = enemy;
+        this.round = 1;
+        this.timeLeft = 30;
     }
 
     enemyEvents(){
@@ -11,6 +13,17 @@ class GameController {
         let player = this.player;
         let enemy = this.enemy;
         let blockSound = this.game.blockSound;
+        let rumble = this.game.rumble;
+        let scope = this;
+
+        socket.on('play_rumble', function(){
+            rumble.play();
+        });
+
+        socket.on('game_over', function(data){
+            console.log(data);
+        });
+
         socket.on('enemy_punch', function () {
             console.log('enemy_punch received');
             enemy.punch();
@@ -28,8 +41,6 @@ class GameController {
         socket.on('punch_done', function (data) {
             console.info('punch animation done');
         });
-
-
 
         socket.on('blocked_head', function (data) {
             console.info('blocked head');
@@ -61,6 +72,17 @@ class GameController {
             player.takeDamage();
             player.takeDamageLegs();
         });
+
+        socket.on('game_update', function (data) {
+            let json = JSON.parse(data);
+            scope.round = json.round;
+            scope.timeLeft = json.tl;
+            scope.updateGameText();
+        })
+    }
+
+    updateGameText(){
+        this.game.text.text = 'Round ' + this.round + ': ' + this.timeLeft + ' sec left';
     }
 
     audioEvents(){

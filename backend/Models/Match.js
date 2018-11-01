@@ -40,6 +40,51 @@ class Match {
     startGame(){
         console.log('Sending startGame event');
         this.io.to(this.roomID).emit('startGame');
+
+        this.round = 1;
+        this.timeLeft = 10;
+        this.handleGameStats();
+    }
+
+    handleWinner(){
+        if(this.player1.headDamage < this.player2.headDamage){ // player 1 win
+            console.log('Player 1 wins');
+            this.player1.getSocket().emit('game_over', 'win');
+            this.player2.getSocket().emit('game_over', 'lose');
+        }else if(this.player1.headDamage > this.player2.headDamage){ // player 2 win
+            console.log('Player 2 wins');
+            this.player1.getSocket().emit('game_over', 'lose');
+            this.player2.getSocket().emit('game_over', 'win');
+        }else { // draw
+            console.log('draw');
+            this.io.to(this.roomID).emit('game_over', 'draw');
+        }
+    }
+
+    playersRumbleDone(){
+        return (this.player1.rumbleDone && this.player2.rumbleDone);
+    }
+
+    handleGameStats(){
+        let scope = this;
+        this.statusTimer = setInterval(function () {
+            if(scope.playersRumbleDone()) {
+                if (scope.timeLeft > 0) {
+                    scope.timeLeft--;
+                } else {
+                    // time is up
+                    if (scope.round < 3) {
+                        scope.round++;
+                        scope.timeLeft = 10;
+                    } else {
+                        // round over
+                        scope.handleWinner();
+                        clearInterval(scope.statusTimer);
+                    }
+                }
+                scope.io.to(scope.roomID).emit('game_update', JSON.stringify({round: scope.round, tl: scope.timeLeft}));
+            }
+        },1000);
     }
 
     getPlayer1(){
@@ -59,7 +104,7 @@ class Match {
         let roomID = this.roomID;
 
         if(player1.getCanPunch()) {
-            player1.getSocket().broadcast.emit('enemy_punch');
+            player2.getSocket().emit('enemy_punch');
             player1.punch(player2, function (headBlocked) {
                 if(headBlocked === true) {
                     player1.getSocket().emit('blocked_head');
@@ -80,13 +125,19 @@ class Match {
     handleKick(player1, player2){
         let io = this.io;
         let roomID = this.roomID;
-        player1.getSocket().broadcast.emit('enemy_kick');
+        player2.getSocket().emit('enemy_kick');
 
         player1.kick(player2, function(){
             player1.getSocket().emit('hit_leg');
             player2.getSocket().emit('hitted_leg');
             player2.takeLegKick();
         })
+    }
+
+    startRumble(){
+        if(this.player1.ready && this.player2.ready){
+            this.io.to(this.roomID).emit('play_rumble');
+        }
     }
 
 
@@ -96,6 +147,26 @@ class Match {
         let scope = this;
 
 
+        //if both players ready, start ready to rumble sound
+        this.player1.getSocket().on('ready', function(){
+            player1.ready = true;
+            scope.startRumble();
+        });
+
+        this.player2.getSocket().on('ready', function(){
+            player2.ready = true;
+            scope.startRumble();
+        });
+
+        // rumble sound done
+        this.player1.getSocket().on('rumble_done', function(){
+            player1.rumbleDone = true;
+        });
+
+        this.player2.getSocket().on('rumble_done', function(){
+            player2.rumbleDone = true;
+        });
+
         // punch events
         this.player1.getSocket().on('punch', function () {
             scope.handlePunch(player1, player2)
@@ -104,7 +175,6 @@ class Match {
         this.player2.getSocket().on('punch', function () {
             scope.handlePunch(player2, player1);
         });
-
 
         // kick events
         this.player1.getSocket().on('kick', function () {
@@ -118,12 +188,12 @@ class Match {
         // move events
         this.player1.getSocket().on('l', function (data) {
             player1.setPosX(data);
-            player1.getSocket().broadcast.volatile.emit('el', data);
+            player2.getSocket().volatile.emit('el', data);
         });
 
         this.player2.getSocket().on('l', function (data) {
             player2.setPosX(data);
-            player2.getSocket().broadcast.volatile.emit('el', data);
+            player1.getSocket().volatile.emit('el', data);
         });
     }
 }

@@ -16,7 +16,8 @@ class Player {
     resetGameStats(){
         // game stats, health etc.
         this.headDamage = 0; // 0-100
-        this.legDamage = 0; // 0-100
+        this.ready = false;
+        this.rumbleDone = false;
         this.headBlocked = true;
         this.canPunch = true;
         this.x = 0;
